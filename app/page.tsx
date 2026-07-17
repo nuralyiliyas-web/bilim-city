@@ -134,8 +134,9 @@ export default function Home() {
   const [hint, setHint] = useState(false);
   const [feedback, setFeedback] = useState<"correct" | "wrong" | null>(null);
   const [showTest, setShowTest] = useState(false);
-  const [language, setLanguage] = useState<"ru" | "kk">("ru");
+  const [language, setLanguage] = useState<"ru" | "kk">("kk");
   const [darkTheme, setDarkTheme] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
   const [activeSubject, setActiveSubject] = useState("");
   const [quickSubject, setQuickSubject] = useState<keyof typeof quickLessons | null>(null);
@@ -147,7 +148,7 @@ export default function Home() {
     const savedProgress = localStorage.getItem(storageKey);
     if (savedName) { setStudent(savedName); setShowGreeting(true); }
     if (savedProgress) setCompleted(JSON.parse(savedProgress));
-    if (localStorage.getItem("bilim-city-language") === "kk") setLanguage("kk");
+    if (localStorage.getItem("bilim-city-language") === "ru") setLanguage("ru");
     if (localStorage.getItem("bilim-city-theme") === "dark") setDarkTheme(true);
   }, []);
 
@@ -155,6 +156,7 @@ export default function Home() {
   const energy = completed.length * 120;
   const currentQuestion = active?.questions[step];
   const correct = useMemo(() => active ? answers.filter((answer, index) => answer === active.questions[index]?.answer).length : 0, [active, answers]);
+  const isKazakh = language === "kk";
 
   function enterCity(event: React.FormEvent) {
     event.preventDefault();
@@ -230,8 +232,8 @@ export default function Home() {
 
   if (!student) return <main className="login-shell"><section className="login-card"><div className="mark">B</div><p className="eyebrow">BILIM CITY</p><h1>Построй город.<br />Пойми мир.</h1><p className="lead">Короткие игровые уроки физики для 9 класса.</p><form onSubmit={enterCity}><label htmlFor="name">Как тебя зовут?</label><input id="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Например, Аян" maxLength={24} autoFocus /><button type="submit">Войти в город <span>→</span></button></form><p className="small">Демо-версия. Прогресс хранится на этом устройстве.</p></section><div className="login-city" aria-hidden="true"><img className="login-mascot" src="/mascot/bilim-leopard.png" alt="" /><div className="sun" /><div className="building b1" /><div className="building b2" /><div className="building b3" /><div className="hill" /></div></main>;
 
-  return <main className={`app-shell ${darkTheme ? "theme-dark" : ""}`}><header><div className="brand"><div className="brand-mark">B</div><div><strong>Bilim City</strong><span>Энергополис</span></div></div><div className="header-stats"><div className="language-toggle" aria-label="Выбор языка"><button className={language === "ru" ? "active" : ""} onClick={() => changeLanguage("ru")}>RU</button><button className={language === "kk" ? "active" : ""} onClick={() => changeLanguage("kk")}>KZ</button></div><button className="theme-toggle" onClick={toggleTheme} aria-label={darkTheme ? "Включить светлый фон" : "Включить темный фон"} title={darkTheme ? "Светлый фон" : "Темный фон"}>{darkTheme ? "☀" : "☾"}</button><span className="energy">⚡ {energy}</span><span className="avatar">{student.slice(0, 1).toUpperCase()}</span></div></header>
-    {showGreeting && <div className="greeting-backdrop"><section className="greeting-card" role="dialog" aria-modal="true"><img src="/mascot/bilim-leopard.png" alt="Барс Bilim City" /><div><p className="eyebrow">ТВОЙ НАСТАВНИК</p><h2>Привет, {student}!</h2><p>Хорошего дня. Давай сегодня разберем одну тему и дадим городу немного энергии.</p><button className="primary" onClick={() => setShowGreeting(false)}>Начать день</button></div></section></div>}
+  return <main className={`app-shell ${darkTheme ? "theme-dark" : ""}`}><header><div className="brand"><div className="brand-mark">B</div><div><strong>Bilim City</strong><span>{isKazakh ? "Энергополис" : "Энергополис"}</span></div></div><div className="header-stats"><div className="settings-wrap"><button className="settings-toggle" onClick={() => setShowSettings(!showSettings)} aria-expanded={showSettings} aria-label={isKazakh ? "Баптаулар" : "Настройки"} title={isKazakh ? "Баптаулар" : "Настройки"}>⚙</button>{showSettings && <section className="settings-panel"><strong>{isKazakh ? "Баптаулар" : "Настройки"}</strong><span>{isKazakh ? "Тіл" : "Язык"}</span><div className="language-toggle" aria-label="Выбор языка"><button className={language === "kk" ? "active" : ""} onClick={() => changeLanguage("kk")}>KZ</button><button className={language === "ru" ? "active" : ""} onClick={() => changeLanguage("ru")}>RU</button></div><span>{isKazakh ? "Фон" : "Фон"}</span><button className="settings-theme" onClick={toggleTheme}>{darkTheme ? (isKazakh ? "Ашық фон" : "Светлый фон") : (isKazakh ? "Қара фон" : "Тёмный фон")}</button></section>}</div><span className="energy">⚡ {energy}</span><span className="avatar">{student.slice(0, 1).toUpperCase()}</span></div></header>
+    {showGreeting && <div className="greeting-backdrop"><section className="greeting-card" role="dialog" aria-modal="true"><img src="/mascot/bilim-leopard.png" alt="Барс Bilim City" /><div><p className="eyebrow">{isKazakh ? "СЕНІҢ ҰСТАЗЫҢ" : "ТВОЙ НАСТАВНИК"}</p><h2>{isKazakh ? `Сәлем, ${student}!` : `Привет, ${student}!`}</h2><p>{isKazakh ? "Күнің сәтті өтсін. Бүгін бір тақырыпты талдап, қалаға энергия берейік." : "Хорошего дня. Давай сегодня разберем одну тему и дадим городу немного энергии."}</p><button className="primary" onClick={() => setShowGreeting(false)}>{isKazakh ? "Күнді бастау" : "Начать день"}</button></div></section></div>}
     <section className="welcome"><div><p className="eyebrow">ТВОЙ УЧЕБНЫЙ ГОРОД</p><h1>Привет, {student}!</h1><p>Сегодня ты можешь дать городу еще немного энергии.</p></div><div className="progress-card"><div><span>Прогресс района</span><strong>{progress}%</strong></div><div className="meter"><i style={{ width: `${progress}%` }} /></div><small>{completed.length} из {lessons.length} объектов запущено</small></div></section>
     <section className="subjects-section"><div className="section-head"><div><p className="eyebrow">{language === "kk" ? "9-СЫНЫП ПӘНДЕРІ" : "ПРЕДМЕТЫ 9 КЛАССА"}</p><h2>{language === "kk" ? "Бағытты таңда" : "Выбери маршрут"}</h2></div><span className="map-note">{language === "kk" ? "Барлық пән бір ойында" : "Все предметы в одной игре"}</span></div><div className="subject-grid">{subjectCards.map((subject) => <button key={subject.id} className={`subject-card subject-${subject.id} ${activeSubject === subject.id ? "selected" : ""}`} onClick={() => openQuickLesson(subject.id as keyof typeof quickLessons)}><span className="subject-icon">{subject.icon}</span><small>{language === "kk" ? "АШЫҚ" : "ОТКРЫТО"}</small><strong>{language === "kk" ? subjectLabels[subject.id as keyof typeof subjectLabels].kkTitle : subject.title}</strong><p>{language === "kk" ? subjectLabels[subject.id as keyof typeof subjectLabels].kkText : subject.text}</p><b className="subject-action">{language === "kk" ? "Сабақты бастау →" : "Начать урок →"}</b></button>)}</div></section>
     <section className="city-section"><div className="section-head"><div><p className="eyebrow">КАРТА ГОРОДА</p><h2>Энергополис</h2></div><span className="map-note">Выбери объект на карте</span></div><div className="city-map">
