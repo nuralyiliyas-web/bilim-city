@@ -192,6 +192,7 @@ export default function Home() {
 
   function openLesson(lesson: Lesson) {
     if (lesson.id > 1 && !completed.includes(lesson.id - 1)) return;
+    setShowGreeting(false);
     setActive({ ...lesson, questions: [...lesson.questions, ...extraQuestions[lesson.id]] }); setStep(0); setAnswers([]); setHint(false); setFeedback(null); setShowTest(false);
   }
 
@@ -213,6 +214,7 @@ export default function Home() {
   }
 
   function openQuickLesson(subjectId: keyof typeof quickLessons) {
+    setShowGreeting(false);
     setActiveSubject(subjectId); setQuickSubject(subjectId); setQuickStep(0); setQuickAnswers([]);
   }
 
