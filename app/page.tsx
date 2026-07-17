@@ -79,6 +79,15 @@ const lessonVisuals = [
   { formula: "A = P × t", caption: "Чем дольше работает устройство, тем больше энергии берет город." }
 ];
 
+const subjectCards = [
+  { id: "physics", icon: "⚡", title: "Физика", text: "Энергополис: 8 тем и практика", status: "Открыто" },
+  { id: "algebra", icon: "∑", title: "Алгебра", text: "Уравнения, функции, неравенства", status: "Скоро" },
+  { id: "chemistry", icon: "⚗", title: "Химия", text: "Реакции, атомы, вещества", status: "Скоро" },
+  { id: "english", icon: "Aa", title: "Английский", text: "Грамматика, слова, разговор", status: "Скоро" },
+  { id: "russian", icon: "Я", title: "Русский язык", text: "Орфография, грамматика, текст", status: "Скоро" },
+  { id: "exam", icon: "★", title: "Госэкзамен", text: "Пробные задания и слабые темы", status: "Скоро" }
+];
+
 export default function Home() {
   const [name, setName] = useState("");
   const [student, setStudent] = useState("");
@@ -91,6 +100,7 @@ export default function Home() {
   const [showTest, setShowTest] = useState(false);
   const [language, setLanguage] = useState<"ru" | "kk">("ru");
   const [showGreeting, setShowGreeting] = useState(false);
+  const [activeSubject, setActiveSubject] = useState("physics");
 
   useEffect(() => {
     const savedName = localStorage.getItem("bilim-city-name");
@@ -161,6 +171,7 @@ export default function Home() {
   return <main className="app-shell"><header><div className="brand"><div className="brand-mark">B</div><div><strong>Bilim City</strong><span>Энергополис</span></div></div><div className="header-stats"><div className="language-toggle" aria-label="Выбор языка"><button className={language === "ru" ? "active" : ""} onClick={() => changeLanguage("ru")}>RU</button><button className={language === "kk" ? "active" : ""} onClick={() => changeLanguage("kk")}>KZ</button></div><span className="energy">⚡ {energy}</span><span className="avatar">{student.slice(0, 1).toUpperCase()}</span></div></header>
     {showGreeting && <div className="greeting-backdrop"><section className="greeting-card" role="dialog" aria-modal="true"><img src="/mascot/bilim-leopard.png" alt="Барс Bilim City" /><div><p className="eyebrow">ТВОЙ НАСТАВНИК</p><h2>Привет, {student}!</h2><p>Хорошего дня. Давай сегодня разберем одну тему и дадим городу немного энергии.</p><button className="primary" onClick={() => setShowGreeting(false)}>Начать день</button></div></section></div>}
     <section className="welcome"><div><p className="eyebrow">ТВОЙ УЧЕБНЫЙ ГОРОД</p><h1>Привет, {student}!</h1><p>Сегодня ты можешь дать городу еще немного энергии.</p></div><div className="progress-card"><div><span>Прогресс района</span><strong>{progress}%</strong></div><div className="meter"><i style={{ width: `${progress}%` }} /></div><small>{completed.length} из {lessons.length} объектов запущено</small></div></section>
+    <section className="subjects-section"><div className="section-head"><div><p className="eyebrow">ПРЕДМЕТЫ 9 КЛАССА</p><h2>Выбери маршрут</h2></div><span className="map-note">Все предметы в одной игре</span></div><div className="subject-grid">{subjectCards.map((subject) => <button key={subject.id} className={`subject-card ${activeSubject === subject.id ? "selected" : ""}`} onClick={() => setActiveSubject(subject.id)}><span>{subject.icon}</span><strong>{subject.title}</strong><p>{subject.text}</p><small>{subject.status}</small></button>)}</div>{activeSubject !== "physics" && <div className="subject-preview"><b>{subjectCards.find((subject) => subject.id === activeSubject)?.title}</b><span>Этот район уже добавлен в план Bilim City. Следующим обновлением откроем первые игровые уроки и тесты.</span></div>}</section>
     <section className="city-section"><div className="section-head"><div><p className="eyebrow">КАРТА ГОРОДА</p><h2>Энергополис</h2></div><span className="map-note">Выбери объект на карте</span></div><div className="city-map">
       <div className="river" /><div className="road r1" /><div className="road r2" />
       {lessons.map((lesson, index) => { const isDone = completed.includes(lesson.id); const unlocked = lesson.id === 1 || completed.includes(lesson.id - 1); return <button key={lesson.id} className={`map-building building-${lesson.id} ${isDone ? "done" : ""} ${!unlocked ? "locked" : ""}`} onClick={() => openLesson(lesson)} aria-label={lesson.title}><span className={`building-shape ${lesson.color}`}>{isDone ? "✓" : lesson.icon}</span><b>{lesson.building}</b><small>{isDone ? "Запущено" : unlocked ? "Открыто" : "Нужен прошлый урок"}</small>{index < lessons.length - 1 && <em>→</em>}</button>; })}
