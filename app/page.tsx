@@ -115,6 +115,15 @@ const quickLessons = {
   }
 };
 
+const subjectLabels = {
+  physics: { kkTitle: "Физика", kkText: "Энергополис: 8 тақырып және практика" },
+  algebra: { kkTitle: "Алгебра", kkText: "Теңдеулер, функциялар, теңсіздіктер" },
+  chemistry: { kkTitle: "Химия", kkText: "Реакциялар, атомдар, заттар" },
+  english: { kkTitle: "Ағылшын тілі", kkText: "Грамматика, сөздер, сөйлесу" },
+  russian: { kkTitle: "Орыс тілі", kkText: "Емле, грамматика, мәтін" },
+  exam: { kkTitle: "Мемлекеттік емтихан", kkText: "Сынақ тапсырмалары және әлсіз тақырыптар" }
+} as const;
+
 export default function Home() {
   const [name, setName] = useState("");
   const [student, setStudent] = useState("");
@@ -127,7 +136,7 @@ export default function Home() {
   const [showTest, setShowTest] = useState(false);
   const [language, setLanguage] = useState<"ru" | "kk">("ru");
   const [showGreeting, setShowGreeting] = useState(false);
-  const [activeSubject, setActiveSubject] = useState("physics");
+  const [activeSubject, setActiveSubject] = useState("");
   const [quickSubject, setQuickSubject] = useState<keyof typeof quickLessons | null>(null);
   const [quickStep, setQuickStep] = useState(0);
   const [quickAnswers, setQuickAnswers] = useState<number[]>([]);
@@ -216,7 +225,7 @@ export default function Home() {
   return <main className="app-shell"><header><div className="brand"><div className="brand-mark">B</div><div><strong>Bilim City</strong><span>Энергополис</span></div></div><div className="header-stats"><div className="language-toggle" aria-label="Выбор языка"><button className={language === "ru" ? "active" : ""} onClick={() => changeLanguage("ru")}>RU</button><button className={language === "kk" ? "active" : ""} onClick={() => changeLanguage("kk")}>KZ</button></div><span className="energy">⚡ {energy}</span><span className="avatar">{student.slice(0, 1).toUpperCase()}</span></div></header>
     {showGreeting && <div className="greeting-backdrop"><section className="greeting-card" role="dialog" aria-modal="true"><img src="/mascot/bilim-leopard.png" alt="Барс Bilim City" /><div><p className="eyebrow">ТВОЙ НАСТАВНИК</p><h2>Привет, {student}!</h2><p>Хорошего дня. Давай сегодня разберем одну тему и дадим городу немного энергии.</p><button className="primary" onClick={() => setShowGreeting(false)}>Начать день</button></div></section></div>}
     <section className="welcome"><div><p className="eyebrow">ТВОЙ УЧЕБНЫЙ ГОРОД</p><h1>Привет, {student}!</h1><p>Сегодня ты можешь дать городу еще немного энергии.</p></div><div className="progress-card"><div><span>Прогресс района</span><strong>{progress}%</strong></div><div className="meter"><i style={{ width: `${progress}%` }} /></div><small>{completed.length} из {lessons.length} объектов запущено</small></div></section>
-    <section className="subjects-section"><div className="section-head"><div><p className="eyebrow">ПРЕДМЕТЫ 9 КЛАССА</p><h2>Выбери маршрут</h2></div><span className="map-note">Все предметы в одной игре</span></div><div className="subject-grid">{subjectCards.map((subject) => <button key={subject.id} className={`subject-card ${activeSubject === subject.id ? "selected" : ""}`} onClick={() => openQuickLesson(subject.id as keyof typeof quickLessons)}><span>{subject.icon}</span><strong>{subject.title}</strong><p>{subject.text}</p></button>)}</div></section>
+    <section className="subjects-section"><div className="section-head"><div><p className="eyebrow">{language === "kk" ? "9-СЫНЫП ПӘНДЕРІ" : "ПРЕДМЕТЫ 9 КЛАССА"}</p><h2>{language === "kk" ? "Бағытты таңда" : "Выбери маршрут"}</h2></div><span className="map-note">{language === "kk" ? "Барлық пән бір ойында" : "Все предметы в одной игре"}</span></div><div className="subject-grid">{subjectCards.map((subject) => <button key={subject.id} className={`subject-card subject-${subject.id} ${activeSubject === subject.id ? "selected" : ""}`} onClick={() => openQuickLesson(subject.id as keyof typeof quickLessons)}><span className="subject-icon">{subject.icon}</span><small>{language === "kk" ? "АШЫҚ" : "ОТКРЫТО"}</small><strong>{language === "kk" ? subjectLabels[subject.id as keyof typeof subjectLabels].kkTitle : subject.title}</strong><p>{language === "kk" ? subjectLabels[subject.id as keyof typeof subjectLabels].kkText : subject.text}</p><b className="subject-action">{language === "kk" ? "Сабақты бастау →" : "Начать урок →"}</b></button>)}</div></section>
     <section className="city-section"><div className="section-head"><div><p className="eyebrow">КАРТА ГОРОДА</p><h2>Энергополис</h2></div><span className="map-note">Выбери объект на карте</span></div><div className="city-map">
       <div className="river" /><div className="road r1" /><div className="road r2" />
       {lessons.map((lesson, index) => { const isDone = completed.includes(lesson.id); const unlocked = lesson.id === 1 || completed.includes(lesson.id - 1); return <button key={lesson.id} className={`map-building building-${lesson.id} ${isDone ? "done" : ""} ${!unlocked ? "locked" : ""}`} onClick={() => openLesson(lesson)} aria-label={lesson.title}><span className={`building-shape ${lesson.color}`}>{isDone ? "✓" : lesson.icon}</span><b>{lesson.building}</b><small>{isDone ? "Запущено" : unlocked ? "Открыто" : "Нужен прошлый урок"}</small>{index < lessons.length - 1 && <em>→</em>}</button>; })}
