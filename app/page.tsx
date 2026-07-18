@@ -105,6 +105,7 @@ const seniorSubjectCards = [
   { id: "chemistry", icon: "⚗", title: "Химия", text: "Реакции, атомы, вещества", status: "Скоро" },
   { id: "english", icon: "Aa", title: "Английский", text: "Грамматика, слова, разговор", status: "Скоро" },
   { id: "russian", icon: "Я", title: "Русский язык", text: "Орфография, грамматика, текст", status: "Скоро" },
+  { id: "biology", icon: "⌬", title: "Биология", text: "Клетка, организм, экология", status: "Открыто" },
   { id: "exam", icon: "★", title: "Госэкзамен", text: "Пробные задания и слабые темы", status: "Скоро" }
 ];
 
@@ -135,7 +136,8 @@ const baseQuickLessons = {
   }
 };
 
-const quickLessons = { ...baseQuickLessons, ...juniorQuickLessons };
+const biologyQuickLessons = { biology: { ru: { title: "Биология: живая клетка", intro: "Клетка - самая маленькая живая система. У неё есть оболочка, цитоплазма и ядро, которое хранит важную информацию.", formula: "клетки -> ткани -> органы -> организм", questions: [{ text: "Что является основной единицей живого?", options: ["Клетка", "Камень", "Облако"], answer: 0 }, { text: "Что хранит информацию в клетке?", options: ["Ядро", "Лист", "Песок"], answer: 0 }, { text: "Из клеток образуются...", options: ["Ткани", "Только звёзды", "Дороги"], answer: 0 }] }, kk: { title: "Биология: тірі жасуша", intro: "Жасуша - тірі ағзаның ең кіші жүйесі. Оның қабықшасы, цитоплазмасы және маңызды ақпарат сақтайтын ядросы бар.", formula: "жасуша -> ұлпа -> мүше -> ағза", questions: [{ text: "Тірі ағзаның негізгі бірлігі не?", options: ["Жасуша", "Тас", "Бұлт"], answer: 0 }, { text: "Жасушада ақпаратты не сақтайды?", options: ["Ядро", "Жапырақ", "Құм"], answer: 0 }, { text: "Жасушалардан не түзіледі?", options: ["Ұлпалар", "Тек жұлдыздар", "Жолдар"], answer: 0 }] } } } as const;
+const quickLessons = { ...baseQuickLessons, ...juniorQuickLessons, ...biologyQuickLessons };
 const subjectCards = [...seniorSubjectCards, ...juniorSubjectCards];
 
 const subjectLabels = {
@@ -144,6 +146,7 @@ const subjectLabels = {
   chemistry: { kkTitle: "Химия", kkText: "Реакциялар, атомдар, заттар" },
   english: { kkTitle: "Ағылшын тілі", kkText: "Грамматика, сөздер, сөйлесу" },
   russian: { kkTitle: "Орыс тілі", kkText: "Емле, грамматика, мәтін" },
+  biology: { kkTitle: "Биология", kkText: "Жасуша, ағза, экология" },
   exam: { kkTitle: "Мемлекеттік емтихан", kkText: "Сынақ тапсырмалары және әлсіз тақырыптар" },
   math: { kkTitle: "Математика", kkText: "Сандар, бөлшектер, есептер" },
   science: { kkTitle: "Жаратылыстану", kkText: "Тірі және өлі табиғат" },
