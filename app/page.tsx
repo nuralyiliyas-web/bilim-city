@@ -175,6 +175,20 @@ const cityRoles = [
   { id: "mentor", ru: "Наставник", kk: "Ұстаз" }
 ] as const;
 
+const avatarOptions = [
+  { id: "bars", ru: "Барс", kk: "Барыс" },
+  { id: "ayan", ru: "Аян", kk: "Аян" },
+  { id: "aisha", ru: "Айша", kk: "Айша" }
+] as const;
+
+const cityNpcs = [
+  { lot: 2, ru: "Привет! Построй библиотеку, и я дам тебе книжную миссию.", kk: "Сәлем! Кітапхана салсаң, саған кітап миссиясын беремін." },
+  { lot: 9, ru: "Здесь будет научный фестиваль. Загляни в лабораторию!", kk: "Мұнда ғылыми фестиваль болады. Зертханаға кіріп шық!" },
+  { lot: 4, ru: "Я тренирую команду для Арены знаний. Присоединяйся!", kk: "Мен Білім аренасына команда дайындап жатырмын. Қосыл!" },
+  { lot: 7, ru: "В саду идей можно отдохнуть и получить новую миссию.", kk: "Идеялар бағында демалып, жаңа миссия алуға болады." },
+  { lot: 11, ru: "Город растёт! Нам нужна ещё одна лаборатория.", kk: "Қала өсіп жатыр! Бізге тағы бір зертхана керек." }
+] as const;
+
 type CityLot = { buildingId: (typeof buildOptions)[number]["id"]; readyAt: number };
 
 const extraQuestions: Record<number, Lesson["questions"]> = {
@@ -207,6 +221,12 @@ export default function Home() {
   const [cityLots, setCityLots] = useState<Record<number, CityLot>>({});
   const [clock, setClock] = useState(Date.now());
   const [cityRole, setCityRole] = useState<(typeof cityRoles)[number]["id"]>("builder");
+  const [dragLot, setDragLot] = useState<number | null>(null);
+  const [cityMode, setCityMode] = useState<"build" | "walk">("build");
+  const [avatarId, setAvatarId] = useState<(typeof avatarOptions)[number]["id"]>("bars");
+  const [avatarLot, setAvatarLot] = useState(0);
+  const [npcMessage, setNpcMessage] = useState("");
+  const [moves, setMoves] = useState(0);
   const [showGreeting, setShowGreeting] = useState(false);
   const [activeSubject, setActiveSubject] = useState("");
   const [quickSubject, setQuickSubject] = useState<keyof typeof quickLessons | null>(null);
@@ -283,6 +303,29 @@ export default function Home() {
     playConstructionSound();
   }
 
+  function moveBuilding(targetLot: number) {
+    if (dragLot === null || dragLot === targetLot || cityLots[targetLot]) return;
+    const nextLots = { ...cityLots, [targetLot]: cityLots[dragLot] };
+    delete nextLots[dragLot];
+    setCityLots(nextLots);
+    localStorage.setItem("bilim-city-lots", JSON.stringify(nextLots));
+    setDragLot(null);
+    setMoves((count) => count + 1);
+  }
+
+  function removeBuilding(lot: number) {
+    const nextLots = { ...cityLots };
+    delete nextLots[lot];
+    setCityLots(nextLots);
+    localStorage.setItem("bilim-city-lots", JSON.stringify(nextLots));
+  }
+
+  function moveAvatar(lot: number) {
+    setAvatarLot(lot);
+    const npc = cityNpcs.find((character) => character.lot === lot);
+    setNpcMessage(npc ? (isKazakh ? npc.kk : npc.ru) : (isKazakh ? "Қаланы зерттеп жүрсің. Ғимараттар мен тұрғындар саған миссия береді." : "Ты исследуешь город. Здания и жители будут давать тебе миссии."));
+  }
+
   function playConstructionSound() {
     const AudioContext = window.AudioContext;
     if (!AudioContext) return;
@@ -356,7 +399,8 @@ export default function Home() {
     <section className="welcome"><div><p className="eyebrow">ТВОЙ УЧЕБНЫЙ ГОРОД</p><h1>Привет, {student}!</h1><p>Сегодня ты можешь дать городу еще немного энергии.</p></div><div className="progress-card"><div><span>Прогресс района</span><strong>{progress}%</strong></div><div className="meter"><i style={{ width: `${progress}%` }} /></div><small>{completed.length} из {lessons.length} объектов запущено</small></div></section>
     <section className="program-card"><div><p className="eyebrow">{isKazakh ? "СЕНІҢ БАҒДАРЛАМАҢ" : "ТВОЯ ПРОГРАММА"}</p><h2>{grade} {isKazakh ? "сынып · Қазақстан" : "класс · Казахстан"}</h2><p>{gradePrograms[grade][language]}</p></div><button onClick={() => setShowSettings(true)}>{isKazakh ? "Сыныпты өзгерту" : "Изменить класс"}</button></section>
     <section className="subjects-section"><div className="section-head"><div><p className="eyebrow">{isKazakh ? `${grade}-СЫНЫП ПӘНДЕРІ` : `ПРЕДМЕТЫ ${grade} КЛАССА`}</p><h2>{isKazakh ? "Бағытты таңда" : "Выбери маршрут"}</h2></div><span className="map-note">{isKazakh ? "Барлық пән бір ойында" : "Все предметы в одной игре"}</span></div><div className="subject-grid">{subjectCards.map((subject) => <button key={subject.id} className={`subject-card subject-${subject.id} ${activeSubject === subject.id ? "selected" : ""}`} onClick={() => openQuickLesson(subject.id as keyof typeof quickLessons)}><span className="subject-icon">{subject.icon}</span><small>{language === "kk" ? "АШЫҚ" : "ОТКРЫТО"}</small><strong>{language === "kk" ? subjectLabels[subject.id as keyof typeof subjectLabels].kkTitle : subject.title}</strong><p>{language === "kk" ? subjectLabels[subject.id as keyof typeof subjectLabels].kkText : subject.text}</p><b className="subject-action">{language === "kk" ? "Сабақты бастау →" : "Начать урок →"}</b></button>)}</div></section>
-    <section className="builder-section"><div className="section-head"><div><p className="eyebrow">{isKazakh ? "СЕНІҢ ҚАЛАҢ" : "ТВОЙ ГОРОД"}</p><h2>{isKazakh ? "Bilim City: құрылыс режимі" : "Bilim City: режим строительства"}</h2></div><span className="map-note">{isKazakh ? "Учаскені басып, ғимарат сал" : "Нажми на участок, чтобы построить здание"}</span></div><div className="builder-toolbar"><div className="role-picker">{cityRoles.map((role) => <button key={role.id} className={cityRole === role.id ? "active" : ""} onClick={() => setCityRole(role.id)}>{isKazakh ? role.kk : role.ru}</button>)}</div><div className="building-picker">{buildOptions.map((building) => <button key={building.id} className={selectedBuilding === building.id ? "active" : ""} onClick={() => setSelectedBuilding(building.id)}><b>{building.mark}</b>{isKazakh ? building.kk : building.ru}</button>)}</div></div><div className="builder-map">{Array.from({ length: 12 }, (_, lot) => { const lotData = cityLots[lot]; const built = buildOptions.find((building) => building.id === lotData?.buildingId); const isBuilding = Boolean(lotData && lotData.readyAt > clock); const secondsLeft = lotData ? Math.max(0, Math.ceil((lotData.readyAt - clock) / 1000)) : 0; const progress = lotData ? Math.min(100, Math.max(0, ((12000 - Math.max(0, lotData.readyAt - clock)) / 12000) * 100)) : 0; return <button key={lot} className={`build-lot ${built && !isBuilding ? `built ${built.id}` : ""} ${isBuilding ? "under-construction" : ""}`} onClick={() => !isBuilding && buildOnLot(lot)} aria-label={built ? (isKazakh ? built.kk : built.ru) : (isKazakh ? "Бос учаске" : "Свободный участок")}>{isBuilding ? <div className="build-timer"><b>{secondsLeft}</b><span>{isKazakh ? "сек. қалды" : "сек. осталось"}</span><i><em style={{ width: `${progress}%` }} /></i></div> : built ? <><b>{built.mark}</b><span>{isKazakh ? built.kk : built.ru}</span></> : <><i>+</i><span>{isKazakh ? "Салу" : "Построить"}</span></>}</button>; })}</div><p className="builder-status">{isKazakh ? `Рөлің: ${cityRoles.find((role) => role.id === cityRole)?.kk}. Қазір ${Object.values(cityLots).filter((lot) => lot.readyAt <= clock).length} ғимарат салынды.` : `Твоя роль: ${cityRoles.find((role) => role.id === cityRole)?.ru}. Уже построено зданий: ${Object.values(cityLots).filter((lot) => lot.readyAt <= clock).length}.`}</p></section>
+    <section className="builder-section"><div className="section-head"><div><p className="eyebrow">{isKazakh ? "СЕНІҢ ҚАЛАҢ" : "ТВОЙ ГОРОД"}</p><h2>{isKazakh ? "Bilim City: құрылыс және серуен" : "Bilim City: строительство и прогулка"}</h2></div></div><div className="builder-toolbar"><div className="role-picker"><button className={cityMode === "build" ? "active" : ""} onClick={() => setCityMode("build")}>{isKazakh ? "Құрылыс" : "Строить"}</button><button className={cityMode === "walk" ? "active" : ""} onClick={() => setCityMode("walk")}>{isKazakh ? "Серуен" : "Гулять"}</button>{cityRoles.map((role) => <button key={role.id} className={cityRole === role.id ? "active" : ""} onClick={() => setCityRole(role.id)}>{isKazakh ? role.kk : role.ru}</button>)}</div><div className="building-picker">{cityMode === "build" ? buildOptions.map((building) => <button key={building.id} className={selectedBuilding === building.id ? "active" : ""} onClick={() => setSelectedBuilding(building.id)}><b>{building.mark}</b>{isKazakh ? building.kk : building.ru}</button>) : avatarOptions.map((avatar) => <button key={avatar.id} className={avatarId === avatar.id ? "active" : ""} onClick={() => setAvatarId(avatar.id)}><b>{avatar.id.slice(0,1).toUpperCase()}</b>{isKazakh ? avatar.kk : avatar.ru}</button>)}</div></div><div className="builder-map">{Array.from({ length: 12 }, (_, lot) => { const lotData = cityLots[lot]; const built = buildOptions.find((building) => building.id === lotData?.buildingId); const isBuilding = Boolean(lotData && lotData.readyAt > clock); const secondsLeft = lotData ? Math.max(0, Math.ceil((lotData.readyAt - clock) / 1000)) : 0; const progress = lotData ? Math.min(100, Math.max(0, ((12000 - Math.max(0, lotData.readyAt - clock)) / 12000) * 100)) : 0; return <button key={lot} draggable={cityMode === "build" && Boolean(built && !isBuilding)} className={`build-lot ${built && !isBuilding ? `built ${built.id}` : ""} ${isBuilding ? "under-construction" : ""}`} onDragStart={() => setDragLot(lot)} onDragEnd={() => setDragLot(null)} onDragOver={(event) => { if (dragLot !== null) event.preventDefault(); }} onDrop={() => moveBuilding(lot)} onDoubleClick={() => cityMode === "build" && built && !isBuilding && removeBuilding(lot)} onClick={() => cityMode === "walk" ? moveAvatar(lot) : !built && !isBuilding && buildOnLot(lot)}>{isBuilding ? <div className="build-timer"><b>{secondsLeft}</b><span>{isKazakh ? "сек. қалды" : "сек. осталось"}</span><i><em style={{ width: `${progress}%` }} /></i></div> : built ? <><b>{built.mark}</b><span>{isKazakh ? built.kk : built.ru}</span></> : <><i>+</i><span>{cityMode === "walk" ? (isKazakh ? "Бар" : "Идти") : (isKazakh ? "Салу" : "Построить")}</span></>}{avatarLot === lot && <strong className={`city-avatar ${avatarId}`}>{avatarId === "bars" ? "Б" : avatarId === "ayan" ? "А" : "А"}</strong>}{cityNpcs.filter((npc) => npc.lot === lot).map((npc) => <em className="city-npc" key={npc.lot}>●</em>)}</button>; })}</div><p className="builder-status">{npcMessage || (isKazakh ? "Серуен режимінде қала бойынша жүріп, тұрғындармен таныс." : "В режиме прогулки ходи по городу и знакомься с жителями.")}</p></section>
+    <section className="mission-section"><div className="section-head"><div><p className="eyebrow">{isKazakh ? "ҚАЛА МИССИЯЛАРЫ" : "МИССИИ ГОРОДА"}</p><h2>{isKazakh ? "Тестсіз тапсырмалар" : "Задания без тестов"}</h2></div></div><div className="mission-grid"><article className={Object.keys(cityLots).length >= 2 ? "mission-done" : ""}><b>{Object.keys(cityLots).length >= 2 ? "✓" : "1"}</b><strong>{isKazakh ? "Қаланы сал" : "Построй город"}</strong><p>{isKazakh ? "Екі ғимарат сал" : "Построй два здания"}</p></article><article className={npcMessage ? "mission-done" : ""}><b>{npcMessage ? "✓" : "2"}</b><strong>{isKazakh ? "Тұрғынмен таныс" : "Познакомься с жителем"}</strong><p>{isKazakh ? "Серуен режимінде NPC-ге бар" : "В режиме прогулки приди к NPC"}</p></article><article className={moves > 0 ? "mission-done" : ""}><b>{moves > 0 ? "✓" : "3"}</b><strong>{isKazakh ? "Ауданды жоспарла" : "Спланируй район"}</strong><p>{isKazakh ? "Дайын ғимаратты басқа жерге сүйре" : "Перетащи готовое здание на другой участок"}</p></article></div></section>
     <section className="city-section"><div className="section-head"><div><p className="eyebrow">КАРТА ГОРОДА</p><h2>Энергополис</h2></div><span className="map-note">Выбери объект на карте</span></div><div className="city-map">
       <div className="river" /><div className="road r1" /><div className="road r2" />
       {lessons.map((lesson, index) => { const isDone = completed.includes(lesson.id); const unlocked = lesson.id === 1 || completed.includes(lesson.id - 1); return <button key={lesson.id} className={`map-building building-${lesson.id} ${isDone ? "done" : ""} ${!unlocked ? "locked" : ""}`} onClick={() => openLesson(lesson)} aria-label={lesson.title}><span className={`building-shape ${lesson.color}`}>{isDone ? "✓" : lesson.icon}</span><b>{lesson.building}</b><small>{isDone ? "Запущено" : unlocked ? "Открыто" : "Нужен прошлый урок"}</small>{index < lessons.length - 1 && <em>→</em>}</button>; })}
