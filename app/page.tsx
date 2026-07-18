@@ -242,6 +242,8 @@ export default function Home() {
   const [npcMessage, setNpcMessage] = useState("");
   const [moves, setMoves] = useState(0);
   const [holdTimer, setHoldTimer] = useState<number | null>(null);
+  const [activityCount, setActivityCount] = useState(0);
+  const [showSecretHero, setShowSecretHero] = useState(false);
   const [showGreeting, setShowGreeting] = useState(false);
   const [activeSubject, setActiveSubject] = useState("");
   const [quickSubject, setQuickSubject] = useState<keyof typeof quickLessons | null>(null);
@@ -287,6 +289,13 @@ export default function Home() {
     return () => cleanups.forEach((cleanup) => cleanup());
   }, [cityLots]);
 
+  useEffect(() => {
+    if (activityCount === 0 || activityCount % 8 !== 0) return;
+    setShowSecretHero(true);
+    const timer = window.setTimeout(() => setShowSecretHero(false), 3000);
+    return () => window.clearTimeout(timer);
+  }, [activityCount]);
+
   const progress = Math.round((completed.length / lessons.length) * 100);
   const energy = completed.length * 120;
   const currentQuestion = active?.questions[step];
@@ -329,6 +338,7 @@ export default function Home() {
     setCityLots(nextLots);
     localStorage.setItem("bilim-city-lots", JSON.stringify(nextLots));
     playConstructionSound();
+    setActivityCount((count) => count + 1);
   }
 
   function moveBuilding(targetLot: number) {
@@ -339,6 +349,7 @@ export default function Home() {
     localStorage.setItem("bilim-city-lots", JSON.stringify(nextLots));
     setDragLot(null);
     setMoves((count) => count + 1);
+    setActivityCount((count) => count + 1);
   }
 
   function removeBuilding(lot: number) {
@@ -361,6 +372,7 @@ export default function Home() {
 
   function moveAvatar(lot: number) {
     setAvatarLot(lot);
+    setActivityCount((count) => count + 1);
     const npc = cityNpcs.find((character) => character.lot === lot);
     setNpcMessage(npc ? (isKazakh ? npc.kk : npc.ru) : (isKazakh ? "Қаланы зерттеп жүрсің. Ғимараттар мен тұрғындар саған миссия береді." : "Ты исследуешь город. Здания и жители будут давать тебе миссии."));
   }
@@ -435,6 +447,7 @@ export default function Home() {
 
   return <main className={`app-shell ${darkTheme ? "theme-dark" : ""}`}><header><div className="brand"><div className="brand-mark">B</div><div><strong>Bilim City</strong><span>Энергополис</span></div></div><div className="header-stats"><button className="teacher-entry" onClick={() => setShowTeacher(true)}>{isKazakh ? "Мұғалімдерге" : "Учителям"}</button><div className="settings-wrap"><button className="settings-toggle" onClick={() => setShowSettings(!showSettings)} aria-expanded={showSettings} aria-label={isKazakh ? "Баптаулар" : "Настройки"} title={isKazakh ? "Баптаулар" : "Настройки"}>⚙</button>{showSettings && <section className="settings-panel"><strong>{isKazakh ? "Баптаулар" : "Настройки"}</strong><span>{isKazakh ? "Сынып" : "Класс"}</span><select className="grade-select" value={grade} onChange={(event) => changeGrade(Number(event.target.value))}>{[5, 6, 7, 8, 9, 10].map((item) => <option value={item} key={item}>{item} {isKazakh ? "сынып" : "класс"}</option>)}</select><span>{isKazakh ? "Тіл" : "Язык"}</span><div className="language-toggle" aria-label="Выбор языка"><button className={language === "kk" ? "active" : ""} onClick={() => changeLanguage("kk")}>KZ</button><button className={language === "ru" ? "active" : ""} onClick={() => changeLanguage("ru")}>RU</button></div><span>{isKazakh ? "Фон" : "Фон"}</span><button className="settings-theme" onClick={toggleTheme}>{darkTheme ? (isKazakh ? "Ашық фон" : "Светлый фон") : (isKazakh ? "Қара фон" : "Тёмный фон")}</button></section>}</div><span className="energy">⚡ {energy}</span><span className="avatar">{student.slice(0, 1).toUpperCase()}</span></div></header>
     {showGreeting && <div className="greeting-backdrop"><section className="greeting-card" role="dialog" aria-modal="true"><img src="/mascot/bilim-leopard.png" alt="Барс Bilim City" /><div><p className="eyebrow">{isKazakh ? "СЕНІҢ ҰСТАЗЫҢ" : "ТВОЙ НАСТАВНИК"}</p><h2>{isKazakh ? `Сәлем, ${student}!` : `Привет, ${student}!`}</h2><p>{isKazakh ? "Күнің сәтті өтсін. Бүгін бір тақырыпты талдап, қалаға энергия берейік." : "Хорошего дня. Давай сегодня разберем одну тему и дадим городу немного энергии."}</p><button className="primary" onClick={() => setShowGreeting(false)}>{isKazakh ? "Күнді бастау" : "Начать день"}</button></div></section></div>}
+    {showSecretHero && <div className="secret-hero" role="status"><img src="/secret-hero.png" alt="Секретный герой" /><span>{isKazakh ? "ҚУАТ РЕЖИМІ!" : "РЕЖИМ СИЛЫ!"}</span></div>}
     <section className="welcome"><div><p className="eyebrow">ТВОЙ УЧЕБНЫЙ ГОРОД</p><h1>Привет, {student}!</h1><p>Сегодня ты можешь дать городу еще немного энергии.</p></div><div className="progress-card"><div><span>Прогресс района</span><strong>{progress}%</strong></div><div className="meter"><i style={{ width: `${progress}%` }} /></div><small>{completed.length} из {lessons.length} объектов запущено</small></div></section>
     <section className="program-card"><div><p className="eyebrow">{isKazakh ? "СЕНІҢ БАҒДАРЛАМАҢ" : "ТВОЯ ПРОГРАММА"}</p><h2>{grade} {isKazakh ? "сынып · Қазақстан" : "класс · Казахстан"}</h2><p>{gradePrograms[grade][language]}</p></div><button onClick={() => setShowSettings(true)}>{isKazakh ? "Сыныпты өзгерту" : "Изменить класс"}</button></section>
     <section className="subjects-section"><div className="section-head"><div><p className="eyebrow">{isKazakh ? `${grade}-СЫНЫП ПӘНДЕРІ` : `ПРЕДМЕТЫ ${grade} КЛАССА`}</p><h2>{isKazakh ? "Бағытты таңда" : "Выбери маршрут"}</h2></div><span className="map-note">{isKazakh ? "Барлық пән бір ойында" : "Все предметы в одной игре"}</span></div><div className="subject-grid">{subjectCards.map((subject) => <button key={subject.id} className={`subject-card subject-${subject.id} ${activeSubject === subject.id ? "selected" : ""}`} onClick={() => openQuickLesson(subject.id as keyof typeof quickLessons)}><span className="subject-icon">{subject.icon}</span><small>{language === "kk" ? "АШЫҚ" : "ОТКРЫТО"}</small><strong>{language === "kk" ? subjectLabels[subject.id as keyof typeof subjectLabels].kkTitle : subject.title}</strong><p>{language === "kk" ? subjectLabels[subject.id as keyof typeof subjectLabels].kkText : subject.text}</p><b className="subject-action">{language === "kk" ? "Сабақты бастау →" : "Начать урок →"}</b></button>)}</div></section>
