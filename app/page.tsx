@@ -202,6 +202,17 @@ const extraQuestions: Record<number, Lesson["questions"]> = {
   8: [{ text: "Если мощность не меняется, а время растёт, работа...", options: ["увеличивается", "уменьшается", "равна нулю"], answer: 0, hint: "A = P x t." }, { text: "Что измеряет электросчётчик дома?", options: ["Расход энергии", "Сопротивление", "Температуру"], answer: 0, hint: "Обычно в кВт·ч." }]
 };
 
+function shuffleQuestionOptions(questions: Lesson["questions"]) {
+  return questions.map((question) => {
+    const options = question.options.map((option, index) => ({ option, isCorrect: index === question.answer }));
+    for (let index = options.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [options[index], options[swapIndex]] = [options[swapIndex], options[index]];
+    }
+    return { ...question, options: options.map((item) => item.option), answer: options.findIndex((item) => item.isCorrect) };
+  });
+}
+
 export default function Home() {
   const [name, setName] = useState("");
   const [student, setStudent] = useState("");
@@ -227,6 +238,7 @@ export default function Home() {
   const [avatarLot, setAvatarLot] = useState(0);
   const [npcMessage, setNpcMessage] = useState("");
   const [moves, setMoves] = useState(0);
+  const [holdTimer, setHoldTimer] = useState<number | null>(null);
   const [showGreeting, setShowGreeting] = useState(false);
   const [activeSubject, setActiveSubject] = useState("");
   const [quickSubject, setQuickSubject] = useState<keyof typeof quickLessons | null>(null);
@@ -259,6 +271,19 @@ export default function Home() {
     return () => window.clearInterval(timer);
   }, []);
 
+  useEffect(() => {
+    const lots = Array.from(document.querySelectorAll<HTMLButtonElement>(".build-lot"));
+    const cleanups = lots.map((element, lot) => {
+      const onStart = () => { if (element.classList.contains("built")) startBuildingRemoval(lot); };
+      const onStop = () => stopBuildingRemoval();
+      element.addEventListener("pointerdown", onStart);
+      element.addEventListener("pointerup", onStop);
+      element.addEventListener("pointerleave", onStop);
+      return () => { element.removeEventListener("pointerdown", onStart); element.removeEventListener("pointerup", onStop); element.removeEventListener("pointerleave", onStop); };
+    });
+    return () => cleanups.forEach((cleanup) => cleanup());
+  }, [cityLots]);
+
   const progress = Math.round((completed.length / lessons.length) * 100);
   const energy = completed.length * 120;
   const currentQuestion = active?.questions[step];
@@ -276,7 +301,7 @@ export default function Home() {
   function openLesson(lesson: Lesson) {
     if (lesson.id > 1 && !completed.includes(lesson.id - 1)) return;
     setShowGreeting(false);
-    setActive({ ...lesson, questions: [...lesson.questions, ...extraQuestions[lesson.id]] }); setStep(0); setAnswers([]); setHint(false); setFeedback(null); setShowTest(false);
+    setActive({ ...lesson, questions: shuffleQuestionOptions([...lesson.questions, ...extraQuestions[lesson.id]]) }); setStep(0); setAnswers([]); setHint(false); setFeedback(null); setShowTest(false);
   }
 
   function changeLanguage(nextLanguage: "ru" | "kk") {
@@ -318,6 +343,17 @@ export default function Home() {
     delete nextLots[lot];
     setCityLots(nextLots);
     localStorage.setItem("bilim-city-lots", JSON.stringify(nextLots));
+  }
+
+  function startBuildingRemoval(lot: number) {
+    if (!cityLots[lot]) return;
+    const timer = window.setTimeout(() => { removeBuilding(lot); setHoldTimer(null); }, 850);
+    setHoldTimer(timer);
+  }
+
+  function stopBuildingRemoval() {
+    if (holdTimer !== null) window.clearTimeout(holdTimer);
+    setHoldTimer(null);
   }
 
   function moveAvatar(lot: number) {
